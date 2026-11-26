@@ -6,26 +6,27 @@
 <title>Список задач</title>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 0; background: #f7f6f2; color: #242920; font: 16px/1.5 system-ui, sans-serif; }
-  main { width: min(100% - 2rem, 38rem); margin: clamp(1.5rem, 7vw, 5rem) auto; }
-  h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1; }
+  body { margin: 0; background: white; color: #222; font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 540px; margin: 32px auto; padding: 0 16px; }
+  h1 { margin: 0 0 20px; font-size: 28px; }
   form, .filters, li { display: flex; align-items: center; gap: .5rem; }
-  form, .search { margin-block: 1rem; }
+  form, .search { margin: 4px 0 16px; }
+  .search input { display: block; margin-top: 4px; }
   input, button { font: inherit; }
   input[type="text"], input[type="search"], button {
-    min-height: 44px; padding: .55rem .75rem; border: 1px solid #7b8277; border-radius: .5rem;
+    min-height: 44px; padding: 6px 10px; border: 1px solid #888; border-radius: 3px;
   }
   input[type="text"], input[type="search"] { width: 100%; min-width: 0; background: white; }
-  button { color: inherit; background: white; cursor: pointer; touch-action: manipulation; }
-  .primary, button[aria-pressed="true"] { background: #214e38; border-color: #214e38; color: white; }
+  button { color: inherit; background: #f2f2f2; cursor: pointer; touch-action: manipulation; }
+  button[aria-pressed="true"] { background: #e1edfa; border-color: #4b7199; }
   .filters { flex-wrap: wrap; }
   ul { padding: 0; list-style: none; }
-  li { margin-block: .5rem; padding: .5rem; border: 1px solid #c5cbc1; border-radius: .5rem; background: white; }
+  li { padding: 4px 0; border-bottom: 1px solid #ddd; }
   li label { display: flex; flex: 1; min-width: 0; align-items: center; min-height: 44px; gap: .5rem; cursor: pointer; }
   li span { overflow-wrap: anywhere; }
   li input { margin: .5rem; }
-  li input:checked + span { text-decoration: line-through; color: #555e54; }
-  :focus-visible { outline: 3px solid #87612e; outline-offset: 2px; }
+  li input:checked + span { text-decoration: line-through; color: #666; }
+  :focus-visible { outline: 2px solid #255d9b; outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -34,7 +35,7 @@
   <label for="task">Новая задача</label>
   <form id="add-task">
     <input id="task" type="text" required maxlength="200">
-    <button class="primary" type="submit">Добавить</button>
+    <button type="submit">Добавить</button>
   </form>
   <div class="search">
     <label for="search">Поиск по названию</label>
