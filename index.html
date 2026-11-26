@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Список задач</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f7f6f2; color: #242920; font: 16px/1.5 system-ui, sans-serif; }
+  main { width: min(100% - 2rem, 38rem); margin: clamp(1.5rem, 7vw, 5rem) auto; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1; }
+  form, .filters, li { display: flex; align-items: center; gap: .5rem; }
+  form, .search { margin-block: 1rem; }
+  input, button { font: inherit; }
+  input[type="text"], input[type="search"], button {
+    min-height: 44px; padding: .55rem .75rem; border: 1px solid #7b8277; border-radius: .5rem;
+  }
+  input[type="text"], input[type="search"] { width: 100%; min-width: 0; background: white; }
+  button { color: inherit; background: white; cursor: pointer; touch-action: manipulation; }
+  .primary, button[aria-pressed="true"] { background: #214e38; border-color: #214e38; color: white; }
+  .filters { flex-wrap: wrap; }
+  ul { padding: 0; list-style: none; }
+  li { margin-block: .5rem; padding: .5rem; border: 1px solid #c5cbc1; border-radius: .5rem; background: white; }
+  li label { display: flex; flex: 1; min-width: 0; align-items: center; min-height: 44px; gap: .5rem; cursor: pointer; }
+  li span { overflow-wrap: anywhere; }
+  li input { margin: .5rem; }
+  li input:checked + span { text-decoration: line-through; color: #555e54; }
+  :focus-visible { outline: 3px solid #87612e; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Список задач</h1>
+  <label for="task">Новая задача</label>
+  <form id="add-task">
+    <input id="task" type="text" required maxlength="200">
+    <button class="primary" type="submit">Добавить</button>
+  </form>
+  <div class="search">
+    <label for="search">Поиск по названию</label>
+    <input id="search" type="search">
+  </div>
+  <div class="filters" role="group" aria-label="Статус задач">
+    <button type="button" data-filter="all" aria-pressed="true">Все</button>
+    <button type="button" data-filter="active" aria-pressed="false">Активные</button>
+    <button type="button" data-filter="done" aria-pressed="false">Завершённые</button>
+  </div>
+  <p id="status" role="status"></p>
+  <ul id="tasks" aria-label="Задачи"></ul>
+</main>
+<script>
+  const storageKey = 'selectel-todo-v1'
+  const form = document.querySelector('#add-task')
+  const taskInput = document.querySelector('#task')
+  const searchInput = document.querySelector('#search')
+  const filters = document.querySelectorAll('[data-filter]')
+  const list = document.querySelector('#tasks')
+  const status = document.querySelector('#status')
+  let filter = 'all'
+  let tasks = []
+  try {
+    const stored = JSON.parse(localStorage.getItem(storageKey))
+    if (Array.isArray(stored)) {
+      tasks = stored.filter(task => task && typeof task.id === 'string'
+        && typeof task.text === 'string' && typeof task.done === 'boolean')
+    }
+  } catch {
+    status.textContent = 'Не удалось прочитать локальное хранилище.'
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(tasks))
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  function render(saved = true) {
+    const search = searchInput.value.trim().toLocaleLowerCase('ru')
+    const visible = tasks.filter(task =>
+      (filter === 'all' || task.done === (filter === 'done'))
+      && task.text.toLocaleLowerCase('ru').includes(search))
+    status.textContent = saved
+      ? (visible.length ? `Показано задач: ${visible.length}` : 'Задач нет.')
+      : 'Не удалось сохранить изменения в браузере.'
+    list.replaceChildren(...visible.map(task => {
+      const row = document.createElement('li')
+      const label = document.createElement('label')
+      const checkbox = document.createElement('input')
+      checkbox.type = 'checkbox'
+      checkbox.checked = task.done
+      const text = document.createElement('span')
+      text.textContent = task.text
+      checkbox.addEventListener('change', () => {
+        task.done = checkbox.checked
+        const saved = save()
+        if (filter !== 'all') render(saved)
+        else if (!saved) status.textContent = 'Не удалось сохранить изменения в браузере.'
+      })
+      label.append(checkbox, text)
+      const remove = document.createElement('button')
+      remove.type = 'button'
+      remove.textContent = 'Удалить'
+      remove.setAttribute('aria-label', `Удалить задачу «${task.text}»`)
+      remove.addEventListener('click', () => {
+        tasks = tasks.filter(item => item.id !== task.id)
+        render(save())
+        taskInput.focus()
+      })
+      row.append(label, remove)
+      return row
+    }))
+  }
+
+  form.addEventListener('submit', event => {
+    event.preventDefault()
+    const text = taskInput.value.trim()
+    if (!text) return
+    tasks.push({id: crypto.randomUUID(), text, done: false})
+    if (filter === 'done') {
+      filter = 'all'
+      filters.forEach(button => button.setAttribute('aria-pressed', button.dataset.filter === filter))
+    }
+    searchInput.value = ''
+    form.reset()
+    render(save())
+    taskInput.focus()
+  })
+
+  searchInput.addEventListener('input', () => render())
+  filters.forEach(button => button.addEventListener('click', () => {
+    filter = button.dataset.filter
+    filters.forEach(item => item.setAttribute('aria-pressed', item === button))
+    render()
+  }))
+  render()
+</script>
+</body>
+</html>
